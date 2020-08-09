@@ -1,6 +1,11 @@
 import numpy as np
 import math
 
+'''
+    Space mission geometry.
+    Angles computed in radians
+'''
+
 
 def spherical_to_vector(az, el):
     """
@@ -130,14 +135,14 @@ def subsatellite_coords_ascending(inclination, w, t, w_e=None):
         :param w: angular velocity of satellite
         :param t: time since satellite crossed the equator northbound.
         :param w_e: angular rotation of planetary body. If none, then assume it's Earth
-        :return: Subsatellite Latitiude and Longitude
+        :return: Subsatellite Longitude adn Latitiude
     """
     if w_e is None:
         w_e = 0.000072921  # Rotation of the earth in rads/s
     lat_s = math.asin(math.sin(inclination) * math.sin(w * t))
     long_s = math.atan(math.cos(inclination) * math.tan(w * t)) - (w_e * t)
 
-    return lat_s, long_s
+    return long_s, lat_s
 
 
 def ground_track_velocity(period, radius_e=None):
@@ -185,20 +190,135 @@ def area_coverage_rate(period, l_outer=None, l_inner=None, look_one_dir=False, e
     return acr
 
 
-def get_max_angles_and_range(rho, radius_e=None, eps_min=math.radians(5)):
+def get_max_angles_and_max_range(rho, radius_e=None, eps_min=math.radians(5)):
     """
         Given value eps_min (typically 5 deg) and angular radius of planet w.r.t Satellite, calculate max planet central
         angle (l_max), max nadir angle, n_max, measured at sat from nadir to ground station, and max range D_max,
-        which the Sat will still be in view.
-    :param eps_min: Minimum value of spacecraft elevation (note: like azimuth and elevation, not altitude)
-    :param rho: Angular radius of planet w.r.t satellite given by radius_e / (radius_e + H)
-    :param radius_e: Spherical radius of planetary body
-    :return: l_max, n_max, D_max
+        which the Sat will still be in view. (SMAD pg. 119)
+        :param eps_min: Minimum value of spacecraft elevation (note: like azimuth and elevation, not altitude)
+        :param rho: Angular radius of planet w.r.t satellite given by radius_e / (radius_e + H)
+        :param radius_e: Spherical radius of planetary body
+        :return: l_max, n_max, D_max
     """
     if radius_e is None:
         radius_e = 6378
-    sin_n = math.sin(rho) * math.cos(eps_min)  # get n_max by math.asin(sin_n)
-    l_max = math.radians(90) - eps_min - math.asin(sin_n)
-    D_max = radius_e * (math.sin(l_max) / sin_n)
-    
-    return l_max, math.asin(sin_n), D_max
+    sin_n_max = math.sin(rho) * math.cos(eps_min)  # get n_max by math.asin(sin_n)
+    l_max = math.radians(90) - eps_min - math.asin(sin_n_max)
+    D_max = radius_e * (math.sin(l_max) / sin_n_max)
+
+    return l_max, math.asin(sin_n_max), D_max
+
+
+def inst_orbit_pole(inclination, L_node):
+    """
+        Calculate instantaneous orbit pole - the pole of the orbit plane at the time of the observation given the
+        inclination of the orbit and the Longitude (L_node) of the ascending node. (SMAD pg. 119)
+        :param inclination: Orbital inclination
+        :param L_node: Longitude of the ascending node
+        :return: Longitude and Latitude of the instantaneous orbit pole
+    """
+    lat_pole = math.radians(90) - inclination
+    long_pole = L_node - math.radians(90)
+
+    return long_pole, lat_pole
+
+
+def calc_lambda_min(long_pole, lat_pole, long_gs, lat_gs):
+    """
+        Calculate the minimum planetary central angle between the satellite's ground track
+        and the gound station (lambda_min) (SMAD pg. 120)
+        :param long_pole: Longitude of the instantaneous orbit pole
+        :param lat_pole: Latitude of the instantaneous orbit pole
+        :param long_gs: Longitude of the ground station
+        :param lat_gs: Latitude of the ground station
+        :return: sine of lambda_min
+    """
+    sin_l_min = math.sin(lat_pole) * math.sin(lat_gs) + math.cos(lat_pole) * math.cos(long_gs) * math.cos(
+        long_gs - long_pole)
+
+    return sin_l_min
+
+
+def get_angles_and_range_closest_approach(long_pole, lat_pole, long_gs, lat_gs, rho, radius_e):
+    l_min = calc_lambda_min(long_pole, lat_pole, long_gs, lat_gs)
+    n_min = math.atan((math.sin(rho) * l_min) / (1 - math.sin(rho) * math.cos(math.asin(l_min))))
+    eps_max = math.radians(90) - math.asin(l_min) - n_min
+    d_min = radius_e * (l_min / math.sin(n_min))
+
+    return n_min, eps_max, d_min
+
+
+def max_angular_rate_sat_from_gs(d_min, v_sat, radius_e=None, altitude=None, period=None):
+    """
+        Get the maximum angular rate of the satellite as seen from the ground station
+        :param d_min: Minimum approach distance (SMAD pg. 120)
+        :param v_sat: Velocity of the satellite
+        :param radius_e: Radius of planetary body
+        :param altitude: Height of the satellite
+        :param period: Orbital period in minutes
+        :return: Max angular rate
+    """
+    if v_sat is not None:
+        assert radius_e is None and altitude is None and period is None
+        theta_max = v_sat / d_min
+    elif radius_e is not None and altitude is not None and period is not None:
+        assert v_sat is None
+        theta_max = (2 * math.pi * (radius_e + altitude)) / (period * d_min)
+    else:
+        raise Exception(
+            "Invalid equation parameters. Either 'v_sat' is not None or" \
+            " radius_e, altitude, and period are not None.")
+
+    return theta_max
+
+
+def total_azimuth_range(lambda_min, lambda_max):
+    """
+        Calculate the total azimuth range that the satellite covers as seen by the ground station
+        :param lambda_min: minimum planetary central angle between the satellite's ground track and the gound station
+        :param lambda_max: max planetary central angle between the satellite's ground track and the gound station
+        :return: total azimuth range
+    """
+    delta_phi = 2 * math.acos((math.tan(lambda_min)) / (math.tan(lambda_max)))
+
+    return delta_phi
+
+
+def calc_total_time_in_view(period, lambda_min, lambda_max):
+    """
+        Calculate the total time the satellite will be in view from the ground station (SMAD pg. 120)
+        :param period: Orbital period
+        :param lambda_min: minimum planetary central angle between the satellite's ground track and the ground station
+        :param lambda_max: max planetary central angle between the satellite's ground track and the ground station
+        :return: Total time in view (T)
+    """
+    T = ((period / 180) * (1 / 0.0174533)) * math.acos((math.cos(lambda_max)) / (math.cos(lambda_min)))
+
+    return T
+
+
+def calc_phi_center(lat_pole, lat_gs, lambda_min):
+    """
+        Calculate azimuht at the center of the viewing arc at which the elevation angle is a maximum.
+        :param lat_pole: Latitude of instantaneous orbit pole
+        :param lat_gs: Latitude of ground station
+        :param lambda_min: minimum planetary central angle between the satellite's ground track and the gound station
+        :return: Phi center
+    """
+    phi_pole = (math.sin(lat_pole) - math.sin(lambda_min) * math.sin(lat_gs)) / (
+            math.cos(lambda_min) * math.cos(lat_gs))
+
+    phi_center = math.radians(180) - phi_pole
+
+    return phi_center
+
+
+def max_time_in_view(period, lambda_max):
+    """
+        Maximum time in view that occurs when satellite passes overhead and lambda_min=0
+    :param period: Orbital period in minutes
+    :param lambda_max: max planetary central angle between the satellite's ground track and the ground station
+    :return: T_max
+    """
+    T_max = period * (lambda_max / (math.radians(180)))
+    return T_max
