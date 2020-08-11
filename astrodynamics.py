@@ -351,3 +351,30 @@ def compute_time_of_flight(M, M_0, n_):
     t_t0 = (M - M_0) / n_
 
     return t_t0
+
+
+def third_body_perturbations(i, n, tbp_type=None):
+    """
+        Calculate third body perturbations
+        :param i: inclination of orbit in degrees
+        :param n: number of orbit revolutions per day
+        :param tbp_type: type of third body perturbation
+        :return: Specific third body perturbation in radians/day
+    """
+    right_asc_tbp = {  # This is in degrees/day, need to convert to radians in final output
+        'o_moon': -0.00338,
+        'o_sun': -0.00154
+    }
+    arg_perigee_tbp = {  # This is in degrees/day, need to convert to radians in final output
+        'w_moon': 0.00169,
+        'w_sun': 0.00077
+    }
+
+    if tbp_type[0] == 'o':
+        tbp = (right_asc_tbp[tbp_type] * np.degrees(np.cos(np.radians(i))) / n) * (1 / 57.2958)
+    elif tbp_type[0] == 'w':
+        tbp = (arg_perigee_tbp[tbp_type] * (4 - 5 * np.degrees(np.sin(np.radians(i)) ** 2)) / n) * (1 / 57.2958)
+    else:
+        raise Exception("Invalid Third Body Pertubation type")
+
+    return tbp
