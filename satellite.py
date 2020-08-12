@@ -4,8 +4,8 @@ from body import Body
 
 
 class Satellite(Body):
-    def __init__(self, name, mass, dimensions, position=None, orbital_info=None, body_type='planet', velocity_0=None,
-                 altitude_0=1000, body_color=None, texture=None):
+    def __init__(self, name, mass, dimensions, position=None, rotation_vel=None, orbital_info=None, body_type='planet',
+                 velocity_0=None, altitude_0=1000, body_color=None, texture=None):
         """
             Satellite class
             :param name: string name of Body
@@ -20,5 +20,6 @@ class Satellite(Body):
             :param body_color: The body's color, random if not specified
             :param texture: Can set body to have a texture instead of a color
         """
-        super().__init__(name, mass, dimensions, position, orbital_info, body_type, velocity_0,
-                         altitude_0, body_color, texture)
+        super().__init__(name=name, mass=mass, dimensions=dimensions, position=position, rotation_vel=rotation_vel,
+                         orbital_info=orbital_info, body_type=body_type, velocity_0=velocity_0, altitude_0=altitude_0,
+                         body_color=body_color, texture=texture)

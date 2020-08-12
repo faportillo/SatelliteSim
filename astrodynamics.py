@@ -9,7 +9,7 @@ import numpy as np
 '''
 
 
-def law_of_gravitation(G, m1, m2, r):
+def law_of_gravitation(G, m1, m2, r, r_hat):
     """
         Netwon's Law of Gravitation
         :param G: universal constant of gravitation
@@ -18,7 +18,7 @@ def law_of_gravitation(G, m1, m2, r):
         :param r: distance from center of planet to satellite
         :return: return magnitude of force caused by gravity
     """
-    F = -G * ((m1 * m2) / r ** 2)
+    F = -G * m1 * m2 * r_hat / r ** 2
 
     return F
 
@@ -77,7 +77,7 @@ def orbital_velocity(g, m1, m2, r, a=None, type='elliptical'):
     u = g * (m1 + m2)
     if type == 'elliptical':
         assert a is not None
-        v = np.sqrt(u((2 / r) - (1 / a)))
+        v = np.sqrt(u * ((2 / r) - (1 / a)))
     elif type == 'circular':
         v = np.sqrt(u / r)
     elif type == 'escape':

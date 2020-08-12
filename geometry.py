@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 '''
     Space mission geometry.
@@ -6,8 +7,21 @@ import math
 '''
 
 
+def spherical_to_cart(r, theta, phi):
+    x = r * np.sin(phi) * np.cos(theta)
+    y = r * np.sin(phi) * np.sin(theta)
+    z = r * np.cos(phi)
+    return x, y, z
+
+
+def get_distance(vec1, vec2):
+    d = np.sqrt((vec1[0] - vec2[0]) ** 2 + (vec1[1] - vec2[1]) ** 2 + (vec1[2] - vec2[2]) ** 2)
+    return d
+
+
 def spherical_to_vector(az, el):
     """
+        NOTE: Might be deprecated
         Convert azimuth and elevation to unit vector coordinates (on the unit sphere with the craft in the center)
         :param az: azimuth - the angular distance from the north or south point of the horizon
                             to the point at which a vertical circle passing
