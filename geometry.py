@@ -12,26 +12,29 @@ def spherical_to_cart(r, theta, phi):
         Convert spherical, or polar, coordinates to cartesian
         :param r: Magnitude of vector
         :param theta: Inclination Angle
-        :param phi: Argument of perigee
+        :param phi: Azimuth Angle
         :return: 3D points
     """
-    if theta == 0 and phi != 0:
+    if theta != 0 and phi != 0:
+        print("Inclination and azimuth")
+        x = r * np.sin(theta) * np.cos(phi)
+        y = r * np.sin(theta) * np.sin(phi)
+        z = r * np.cos(theta)
+    elif phi == 0 and theta != 0:
+        print("Inclination with no azimuth")
+        x = r * np.cos(theta)
+        y = 0
+        z = r * np.sin(theta)
+    else:
+        print("Azimuth with no inclination, or no azimuth and no inclination")
         x = r * np.cos(phi)
         y = r * np.sin(phi)
-        z = 0  # r * np.cos(phi)
-    elif phi == 0 and theta != 0:
-        x = r * np.cos(theta)
-        y = r * np.sin(theta)
         z = 0
-    else:
-        x = r * np.sin(phi) * np.cos(theta)
-        y = r * np.sin(phi) * np.sin(theta)
-        z = r * np.cos(phi)
     return x, y, z
 
 
 def cart_to_vpython(v):
-    return v[2], v[0], v[1]
+    return v[1], v[2], v[0]
 
 
 def get_distance(vec1, vec2):

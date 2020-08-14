@@ -42,8 +42,8 @@ class Satellite(Body):
             # self.r_p = ast.two_body_equation(self.orbital_info["semimajor_axis"], self.orbital_info["eccentricity"],
             #                                 self.orbital_info["argument_perigee"] + self.orbital_info[
             #                                     "right_ascension"])
-            self.position = geo.spherical_to_cart(self.r_p, self.orbital_info["argument_perigee"],
-                                                  self.orbital_info['inclination'])
+            self.position = geo.cart_to_vpython(geo.spherical_to_cart(self.r_p, self.orbital_info["inclination"],
+                                                                      self.orbital_info['argument_perigee']))
 
         self.body = box(pos=vector(self.position[0], self.position[1], self.position[2]),
                         length=dimensions[0], height=dimensions[1], width=dimensions[2],
@@ -52,9 +52,10 @@ class Satellite(Body):
                         texture=texture)
 
         mag_velocity = ast.orbital_velocity(G, primary_body, self, type=orbit_type)
-        velocity_vec = geo.spherical_to_cart(mag_velocity, self.orbital_info['inclination'],
-                                             self.orbital_info['argument_perigee'])
-        self.velocity_0 = vector(velocity_vec[2], velocity_vec[0], velocity_vec[1])
+        # velocity_vec = geo.cart_to_vpython(geo.spherical_to_cart(mag_velocity, self.orbital_info['inclination'],
+        #                                                         self.orbital_info['argument_perigee']))
+        velocity_vec = self.body.pos.hat * mag_velocity
+        self.velocity_0 = velocity_vec  # vector(velocity_vec[0], velocity_vec[1], velocity_vec[2])
         print("{} -> Initial Velocity: {}".format(self.name, self.velocity_0))
 
         super().__init__(name=self.name, mass=self.mass, dimensions=self.dimensions, position=self.position,
