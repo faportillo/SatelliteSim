@@ -8,10 +8,30 @@ import numpy as np
 
 
 def spherical_to_cart(r, theta, phi):
-    x = r * np.sin(phi) * np.cos(theta)
-    y = r * np.sin(phi) * np.sin(theta)
-    z = r * np.cos(phi)
+    """
+        Convert spherical, or polar, coordinates to cartesian
+        :param r: Magnitude of vector
+        :param theta: Inclination Angle
+        :param phi: Argument of perigee
+        :return: 3D points
+    """
+    if theta == 0 and phi != 0:
+        x = r * np.cos(phi)
+        y = r * np.sin(phi)
+        z = 0  # r * np.cos(phi)
+    elif phi == 0 and theta != 0:
+        x = r * np.cos(theta)
+        y = r * np.sin(theta)
+        z = 0
+    else:
+        x = r * np.sin(phi) * np.cos(theta)
+        y = r * np.sin(phi) * np.sin(theta)
+        z = r * np.cos(phi)
     return x, y, z
+
+
+def cart_to_vpython(v):
+    return v[2], v[0], v[1]
 
 
 def get_distance(vec1, vec2):

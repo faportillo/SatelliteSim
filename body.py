@@ -4,8 +4,8 @@ from vpython import *
 
 
 class Body(object):
-    def __init__(self, name, mass, dimensions, position=None, rotation_vel=None, orbital_info=None, body_type='planet',
-                 velocity_0=None, altitude_0=1000, body_color=None, texture=None):
+    def __init__(self, name, mass, dimensions, position, rotation_vel=None, orbital_info=None, body_type='planet',
+                 velocity_0=None, body_color=None, texture=None):
         """
             Initialize the Body class. Will be assigned initial position at the ascending node based on orbital info.
             :param name: string name of Body
@@ -27,7 +27,6 @@ class Body(object):
         self.rotation_vel = rotation_vel
         self.orbital_info = orbital_info
         self.body_type = body_type
-        self.altitude = altitude_0
         self.body_color = body_color
         self.texture = texture
 
@@ -36,35 +35,15 @@ class Body(object):
             for key in self.orbital_info:
                 print(self.name, "->", key, ":", self.orbital_info[key])
 
-        if position is not None:
-            self.position = position
-        elif position is None and orbital_info is not None:  # If initial position not specified, then assume it's orbiting body
-            self.r_p = ast.compute_perigee_radius(self.orbital_info["semimajor_axis"],
-                                                  self.orbital_info["eccentricity"])
-            print("{}->Radius of Perigee: {}".format(self.name, self.r_p))
-            if self.orbital_info['inclination'] == 0:
-                self.position = (
-                    self.r_p * np.cos(self.orbital_info["argument_perigee"]),
-                    self.r_p * np.sin(self.orbital_info["argument_perigee"]), 0)
-            else:
-                self.position = (
-                    self.r_p * np.cos(self.orbital_info["argument_perigee"]) * np.sin(self.orbital_info["inclination"]),
-                    self.r_p * np.sin(self.orbital_info["argument_perigee"]) * np.sin(self.orbital_info["inclination"]),
-                    self.r_p * np.cos(orbital_info["inclination"]))
+        self.position = position
 
-        print("{}->Initial Position: {}".format(self.name, self.position))
+        print("{} -> Initial Position: {}".format(self.name, self.position))
         if body_type == 'planet':
             self.body = sphere(pos=vector(self.position[0], self.position[1], self.position[2]),
                                radius=self.dimensions,
                                color=body_color if body_color is not None else vector.random(),
                                make_trail=True,
                                texture=texture)
-        elif body_type == 'satellite':
-            self.body = box(pos=vector(self.position[0], self.position[1], self.position[2]),
-                            length=self.dimensions[0], height=self.dimensions[1], width=self.dimensions[2],
-                            color=body_color if body_color is not None else vector.random(),
-                            make_trail=True,
-                            texture=texture)
         self.body.v = velocity_0
 
     def update_body(self, a, dt):

@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from vpython import *
 
 '''
     Kepler's Laws of Planetary Motion:
@@ -9,16 +10,18 @@ import numpy as np
 '''
 
 
-def law_of_gravitation(G, m1, m2, r, r_hat):
+def law_of_gravitation(G, primary_body, orbiting_body):
     """
         Netwon's Law of Gravitation
         :param G: universal constant of gravitation
-        :param m1: mass of planetary body
-        :param m2: mass of satellite
-        :param r: distance from center of planet to satellite
+        :param primary_body: Primary orbiting body
+        :param orbiting_body: Satellite or other orbiting body
         :return: return magnitude of force caused by gravity
     """
-    F = -G * m1 * m2 * r_hat / r ** 2
+    m1 = primary_body.mass
+    m2 = orbiting_body.mass
+    r = orbiting_body.body.pos
+    F = -G * m1 * m2 * r.hat / (mag2(r - primary_body.body.pos))
 
     return F
 
@@ -63,27 +66,34 @@ def energy_equation(g, m1, m2, V=None, r=None, a=None):
     return energy
 
 
-def orbital_velocity(g, m1, m2, r, a=None, type='elliptical'):
+def orbital_velocity(g, primary_body, orbiting_body, type='elliptical'):
     """
         Orbital velocity of satellite relative to planetary body.
         :param g: universal constant of gravitation
-        :param m1: mass of planetary body
-        :param m2: mass of satellite
-        :param r: orbital distance between bodies
-        :param a: semi-major axis
+        :param primary_body: Primary orbiting body
+        :param orbiting_body: Satellite or other orbiting body
         :param type: {elliptical, circular, escape}
         :return: Orbital velocity of satellite
     """
-    u = g * (m1 + m2)
+    m1 = primary_body.mass
+    m2 = orbiting_body.mass
+    r = np.sqrt(mag2(primary_body.body.pos - orbiting_body.body.pos))
+    if orbiting_body.body_type == 'planet':
+        u = g * (m1 * m2)
+    else:
+        u = g * m1
     if type == 'elliptical':
-        assert a is not None
-        v = np.sqrt(u * ((2 / r) - (1 / a)))
+        assert orbiting_body.orbital_info['semimajor_axis'] is not None
+        a = orbiting_body.orbital_info['semimajor_axis']
+        v_o = np.sqrt(u * ((2 / r) - (1 / a)))
     elif type == 'circular':
-        v = np.sqrt(u / r)
+        v_o = np.sqrt(u / r)
     elif type == 'escape':
-        v = np.sqrt(2 * u / r)
+        v_o = np.sqrt(2 * u / r)
+    else:
+        raise Exception("Invalid orbit type.")
 
-    return v
+    return v_o
 
 
 def angular_momentum(pos_vector, vel_vector):

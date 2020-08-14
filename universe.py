@@ -36,7 +36,7 @@ def test2():
     G = 1
     dt = 0.0005
     # sun = Body(name="Sun", mass=100, dimensions=1, position=(0, 0, 0), body_type='planet', body_color=vector(1, 1, 0))
-    earth = Body(name="Earth", mass=100, dimensions=1, position=(0, 0, 0), rotation_vel=7.292e1,
+    earth = Body(name="Earth", mass=100, dimensions=1, position=(0, 0, 0), rotation_vel=7.292e1 / 5,
                  body_type='planet',
                  body_color=vector(1, 1, 1),
                  texture=textures.earth)
@@ -47,65 +47,75 @@ def test2():
                                     "right_ascension": np.radians(0),
                                     "argument_perigee": np.radians(0)},
                       body_type="satellite",
-                      body_color=color.red,
-                      velocity_0=vector(0, 8.7, 0))
+                      primary_body=earth,
+                      body_color=color.red, G=G)
 
     sat_2 = Satellite(name="Sat2", mass=1, dimensions=[0.1, 0.1, 0.1],
-                      orbital_info={"semimajor_axis": 4.3,
+                      orbital_info={"semimajor_axis": 1.3,
                                     "eccentricity": 0.0,
-                                    "inclination": np.radians(20),
-                                    "right_ascension": np.radians(30),
-                                    "argument_perigee": np.radians(70)},
+                                    "inclination": np.radians(30),
+                                    "right_ascension": np.radians(0),
+                                    "argument_perigee": np.radians(0)},
                       body_type="satellite",
-                      body_color=color.green,
-                      velocity_0=vector(3.427, 0.426, 1.172))
+                      orbit_type='circular',
+                      primary_body=earth,
+                      body_color=color.green, G=G)
 
     sat_3 = Satellite(name="Sat3", mass=0.1, dimensions=[0.1, 0.1, 0.1],
                       orbital_info={"semimajor_axis": 5,
                                     "eccentricity": 0.0,
                                     "inclination": np.radians(0),
                                     "right_ascension": np.radians(0),
-                                    "argument_perigee": np.radians(0)},
+                                    "argument_perigee": np.radians(45)},
                       body_type="satellite",
-                      body_color=color.white,
-                      velocity_0=vector(0, 3, 0))
+                      orbit_type='circular',
+                      primary_body=earth,
+                      body_color=color.white, G=G)
 
     sat_4 = Satellite(name="Sat4", mass=0.1, dimensions=[0.1, 0.1, 0.1],
-                      orbital_info={"semimajor_axis": 3.2,
+                      orbital_info={"semimajor_axis": 4.2,
                                     "eccentricity": 0.0,
                                     "inclination": np.radians(-30),
                                     "right_ascension": np.radians(0),
-                                    "argument_perigee": np.radians(-20)},
+                                    "argument_perigee": np.radians(0)},
                       body_type="satellite",
-                      body_color=color.yellow,
-                      velocity_0=vector(-2.627, 4.842, 0.956))
+                      orbit_type='circular',
+                      primary_body=earth,
+                      body_color=color.yellow, G=G)
 
     sat_5 = Satellite(name="Sat5", mass=0.1, dimensions=[0.1, 0.1, 0.1],
                       orbital_info={"semimajor_axis": 2.4,
                                     "eccentricity": 0.0,
-                                    "inclination": np.radians(0.2),
+                                    "inclination": np.radians(0),
                                     "right_ascension": np.radians(0),
-                                    "argument_perigee": np.radians(-20)},
+                                    "argument_perigee": np.radians(0)},
                       body_type="satellite",
-                      body_color=color.magenta,
-                      velocity_0=vector(6.458, 0, 0))
+                      orbit_type='circular',
+                      primary_body=earth,
+                      body_color=color.magenta, G=G)
+    sat_6 = Satellite(name="Sat6", mass=0.1, dimensions=[0.1, 0.1, 0.1],
+                      orbital_info={"semimajor_axis": 13.5,
+                                    "eccentricity": 0.7,
+                                    "inclination": np.radians(0),
+                                    "right_ascension": np.radians(0),
+                                    "argument_perigee": np.radians(0)},
+                      body_type="satellite",
+                      orbit_type='elliptical',
+                      primary_body=earth,
+                      body_color=color.magenta, G=G)
 
-    sat_2_vel = ast.orbital_velocity(G, earth.mass, sat_5.mass, geo.get_distance(earth.position, sat_5.position),
-                                     type='circular')
-    print(sat_2_vel)
-
-    body_list = [sat_1, sat_2, sat_3, sat_4, sat_5]
+    body_list = [sat_1, sat_2, sat_3, sat_4, sat_5, sat_6]
+    # body_list = [sat_5]
     while 1:
         rate(400)
-        # r = sat_1.body.pos
-
         for b in body_list:
-            F1 = -G * earth.mass * b.mass * b.body.pos.hat / (mag2(b.body.pos))
+            F1 = ast.law_of_gravitation(G, earth, b)
             a1 = F1 / b.mass
-            b.body.v = b.body.v + a1 * dt
-            b.body.pos = b.body.pos + b.body.v * dt
+            b.update_body(a1, dt)
+            # print("{}->Force: {}, Acceleration: {}".format(b.name, F1, a1))
 
-        earth.update_body(None, dt)
+            earth.update_body(None, dt)
+            # i += 1
 
 
 def universe():
@@ -116,13 +126,12 @@ def universe():
 
     sat_1 = Satellite(name="Sat1", mass=4474, dimensions=[10000, 10000, 10000],
                       orbital_info={"semimajor_axis": 696340 + 1000,
-                                    "eccentricity": 0.2,
+                                    "eccentricity": 0.0,
                                     "inclination": np.radians(0),
-                                    "right_ascension": np.radians(30),
-                                    "argument_perigee": np.radians(20)},
+                                    "right_ascension": np.radians(0),
+                                    "argument_perigee": np.radians(0)},
                       body_type="satellite",
-                      body_color=color.red,
-                      velocity_0=vector(0, 7654, 0)
+                      body_color=color.red
                       )
     print(sat_1.position)
 
