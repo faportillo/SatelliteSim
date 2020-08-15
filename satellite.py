@@ -52,12 +52,14 @@ class Satellite(Body):
                         texture=texture)
 
         mag_velocity = ast.orbital_velocity(G, primary_body, self, type=orbit_type)
-        # velocity_vec = geo.cart_to_vpython(geo.spherical_to_cart(mag_velocity, self.orbital_info['inclination'],
-        #                                                         self.orbital_info['argument_perigee']))
-        velocity_vec = self.body.pos.hat * mag_velocity
-        self.velocity_0 = velocity_vec  # vector(velocity_vec[0], velocity_vec[1], velocity_vec[2])
-        print("{} -> Initial Velocity: {}".format(self.name, self.velocity_0))
+        velocity_vec = geo.cart_to_vpython(
+            ast.compute_initial_velocity(mag_velocity, self.orbital_info['inclination'],
+                                         self.orbital_info['argument_perigee']))
 
+        self.velocity_0 = vector(velocity_vec[0], velocity_vec[1], velocity_vec[2])
+        print("{} -> Initial Velocity: {}".format(self.name, self.velocity_0))
+        self.arrow = arrow(pos=vector(self.position[0], self.position[1], self.position[2]), axis=self.velocity_0,
+                           shaftwidth=0.1, color=self.body_color)
         super().__init__(name=self.name, mass=self.mass, dimensions=self.dimensions, position=self.position,
                          rotation_vel=self.rotation_vel, orbital_info=self.orbital_info, body_type=self.body_type,
                          velocity_0=self.velocity_0, body_color=self.body_color, texture=self.texture)

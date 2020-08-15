@@ -64,7 +64,7 @@ def test2():
     sat_3 = Satellite(name="Sat3", mass=0.1, dimensions=[0.1, 0.1, 0.1],
                       orbital_info={"semimajor_axis": 1.3,
                                     "eccentricity": 0.0,
-                                    "inclination": np.radians(45),
+                                    "inclination": np.radians(10),
                                     "right_ascension": np.radians(0),
                                     "argument_perigee": np.radians(0)},
                       body_type="satellite",
@@ -75,9 +75,9 @@ def test2():
     sat_4 = Satellite(name="Sat4", mass=0.1, dimensions=[0.1, 0.1, 0.1],
                       orbital_info={"semimajor_axis": 1.3,
                                     "eccentricity": 0.0,
-                                    "inclination": np.radians(45),
+                                    "inclination": np.radians(20),
                                     "right_ascension": np.radians(0),
-                                    "argument_perigee": np.radians(45)},
+                                    "argument_perigee": np.radians(0)},
                       body_type="satellite",
                       orbit_type='circular',
                       primary_body=earth,
@@ -96,18 +96,18 @@ def test2():
     sat_6 = Satellite(name="Sat6", mass=0.1, dimensions=[0.1, 0.1, 0.1],
                       orbital_info={"semimajor_axis": 1.3,
                                     "eccentricity": 0.0,
-                                    "inclination": np.radians(30),
+                                    "inclination": np.radians(0),
                                     "right_ascension": np.radians(0),
-                                    "argument_perigee": np.radians(0)},
+                                    "argument_perigee": np.radians(60)},
                       body_type="satellite",
                       orbit_type='elliptical',
                       primary_body=earth,
-                      body_color=color.magenta, G=G)
+                      body_color=color.cyan, G=G)
 
     body_list = [sat_1, sat_2, sat_3, sat_4, sat_5, sat_6]
     # body_list = [sat_5]
     i = 0
-    while i < 10:
+    while i < 100000:
         rate(400)
         for b in body_list:
             F1 = ast.law_of_gravitation(G, earth, b)

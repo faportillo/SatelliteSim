@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from vpython import *
+import geometry as geo
 
 '''
     Kepler's Laws of Planetary Motion:
@@ -94,6 +95,12 @@ def orbital_velocity(g, primary_body, orbiting_body, type='elliptical'):
         raise Exception("Invalid orbit type.")
 
     return v_o
+
+
+def compute_initial_velocity(vel, inclination, arg_perigee):
+    x, y, z = geo.spherical_to_cart(vel, inclination, arg_perigee)
+    vel_vec = -y, x, z
+    return vel_vec
 
 
 def angular_momentum(pos_vector, vel_vector):
